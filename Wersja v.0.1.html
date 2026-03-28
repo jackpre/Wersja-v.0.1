@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfel Inwestycyjny</title>
+    <!-- Konfiguracja PWA -->
+    <link rel="manifest" id="manifest-link">
+    <meta name="theme-color" content="#f3ba2f">
+    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2YzYmEyZiI+PHBhdGggZD0iTTEyIDJMMiAxMmgydjhoMTB2LThoMkwxMiAyeiIvPjwvc3ZnPg==">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0b0e11;
+            color: white;
+            min-height: 100vh;
+        }
+        .gold-glow {
+            background: linear-gradient(135deg, #f3ba2f 0%, #c99400 100%);
+        }
+        .gold-text {
+            color: #f3ba2f;
+        }
+        .silver-text {
+            color: #e5e7eb;
+        }
+        .card-bg {
+            background-color: #1e2329;
+            border: 1px solid #474d57;
+        }
+        .inner-card {
+            background-color: #2b3139;
+            border: 1px solid #474d57;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e2329;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #474d57;
+            border-radius: 10px;
+        }
+        .type-btn.active {
+            background-color: #f3ba2f;
+            color: black;
+            border-color: #f3ba2f;
+        }
+        
+        input[type="number"], input[type="text"], textarea {
+            color-scheme: dark;
+        }
+        
+        .sort-header {
+            cursor: pointer;
+            transition: color 0.2s;
+            user-select: none;
+        }
+        .sort-header:hover {
+            color: white;
+        }
+        .sort-icon {
+            display: inline-block;
+            margin-left: 4px;
+            font-size: 10px;
+            opacity: 0.5;
+        }
+        .sort-header.active .sort-icon {
+            opacity: 1;
+            color: #f3ba2f;
+        }
+        #weightUnitToggle {
+            cursor: pointer;
+            transition: transform 0.1s, background-color 0.2s;
+        }
+        #weightUnitToggle:active {
+            transform: scale(0.98);
+        }
+        /* Klasy pomocnicze do ukrywania pasków przewijania */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+</head>
+<body class="pb-6 md:pb-12">
+
+    <!-- NAGŁÓWEK (NAVBAR) -->
+    <header id="mainHeader" class="card-bg border-t-0 border-x-0 mb-4 md:mb-8 sticky top-0 z-50 backdrop-blur-md bg-[#1e2329]/90">
+        <div class="max-w-7xl mx-auto px-4 h-auto md:h-24 py-3 md:py-0 flex flex-col md:flex-row items-center justify-between gap-2 md:gap-6">
+            
+            <!-- TYTUŁ I STATUS (PO LEWEJ) -->
+            <div class="flex flex-col items-center md:items-start gap-1 order-1 w-full md:w-auto text-center md:text-left">
+                <h1 class="text-xl md:text-2xl font-black tracking-tight text-white flex justify-center md:justify-start items-center gap-2 w-full">
+                    Portfel Inwestycyjny
+                    <span class="text-[10px] md:text-xs font-bold text-[#848e9c] bg-[#2b3139] border border-[#474d57] px-2 py-0.5 rounded-full uppercase tracking-wider">v.01</span>
+                </h1>
+                <div class="flex items-center justify-center md:justify-start gap-2 w-full">
+                    <div id="statusDot" class="h-2 w-2 rounded-full bg-green-500"></div>
+                    <span id="lastUpdate" class="text-[10px] text-[#848e9c]">Inicjalizacja...</span>
+                    <span class="text-[10px] text-[#474d57] mx-0.5">•</span>
+                    <span class="text-[10px] text-[#848e9c] uppercase font-bold tracking-tight">Binance:</span>
+                    <span id="countdown" class="text-[10px] gold-text font-bold font-mono">5s</span>
+                </div>
+                
+                <!-- STATUS GIEŁD ŚWIATOWYCH -->
+                <div class="flex items-start justify-center md:justify-start gap-4 mt-2 w-full overflow-x-auto hide-scrollbar pb-1">
+                    <div id="ex-shanghai" class="flex flex-col text-left text-[#848e9c] transition-colors duration-300 whitespace-nowrap">
+                        <span class="text-[9px] uppercase font-bold tracking-wider leading-none">Szanghaj</span>
+                        <span class="text-[8px] mt-0.5 opacity-80 tracking-wider">02:30-08:00 (PL)</span>
+                    </div>
+                    <div id="ex-london" class="flex flex-col text-left text-[#848e9c] transition-colors duration-300 whitespace-nowrap">
+                        <span class="text-[9px] uppercase font-bold tracking-wider leading-none">Londyn</span>
+                        <span class="text-[8px] mt-0.5 opacity-80 tracking-wider">09:00-17:30 (PL)</span>
+                    </div>
+                    <div id="ex-newyork" class="flex flex-col text-left text-[#848e9c] transition-colors duration-300 whitespace-nowrap">
+                        <span class="text-[9px] uppercase font-bold tracking-wider leading-none">Nowy Jork</span>
+                        <span class="text-[8px] mt-0.5 opacity-80 tracking-wider">15:30-22:00 (PL)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PANEL CENOWY (PO PRAWEJ) -->
+            <div class="flex w-full md:w-auto justify-center order-2 pt-2 mt-2 border-t border-[#474d57] md:border-none md:pt-0 md:mt-0">
+                <!-- Ceny rynkowe (PLN, USD, Gram) -->
+                <div class="grid grid-cols-3 w-full md:flex md:items-center md:gap-8 divide-x divide-[#474d57] md:divide-none">
+                    <!-- Sekcja PLN -->
+                    <div class="flex flex-col md:flex-row items-center justify-center md:justify-end gap-1.5 md:gap-2 text-center md:text-right md:border-r md:border-[#474d57] md:pr-8 px-1 md:px-0">
+                        <span id="pricePLN" class="text-sm md:text-xl font-bold transition-colors duration-300 leading-none mt-0.5 md:mt-0">---</span>
+                        <span id="changePLN" class="text-[9px] md:text-[10px] font-bold px-1.5 py-0.5 rounded opacity-0 flex items-center justify-center h-[18px]">0%</span>
+                    </div>
+                    <!-- Sekcja USD -->
+                    <div class="flex flex-col md:flex-row items-center justify-center md:justify-end gap-1.5 md:gap-2 text-center md:text-right md:border-r md:border-[#474d57] md:pr-8 px-1 md:px-0">
+                        <span id="priceUSD" class="text-sm md:text-xl font-bold transition-colors duration-300 leading-none mt-0.5 md:mt-0">---</span>
+                        <span id="changeUSD" class="text-[9px] md:text-[10px] font-bold px-1.5 py-0.5 rounded opacity-0 flex items-center justify-center h-[18px]">0%</span>
+                    </div>
+                    <!-- Sekcja Gram (PLN/g) -->
+                    <div class="flex flex-col md:flex-row items-center justify-center md:justify-end gap-1.5 md:gap-2 text-center md:text-right px-1 md:px-0">
+                        <span id="priceGramPLN" class="text-sm md:text-xl font-bold gold-text leading-none mt-0.5 md:mt-0">---</span>
+                        <span class="text-[9px] md:text-[10px] text-[#848e9c] font-bold flex items-center justify-center h-[18px]">PLN/g</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 flex flex-col-reverse lg:grid lg:grid-cols-4 gap-4 md:gap-8">
+        
+        <!-- LEWA KOLUMNA -->
+        <div class="lg:col-span-1 space-y-4 md:space-y-6">
+            
+            <!-- Ręczna cena srebra -->
+            <div class="card-bg shadow-xl overflow-hidden">
+                <button onclick="toggleSection('silverSection', 'silverIcon')" class="w-full px-4 py-4 md:px-6 md:py-5 flex justify-between items-center cursor-pointer focus:outline-none hover:bg-[#2b3139]/50 transition-colors">
+                    <h3 class="text-sm font-bold text-[#e5e7eb] flex items-center">Kurs Srebra</h3>
+                    <svg id="silverIcon" class="h-4 w-4 text-[#848e9c] transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                </button>
+                <div id="silverSection" class="hidden px-4 pb-4 md:px-6 md:pb-6">
+                    <label class="block text-[10px] font-bold text-[#848e9c] uppercase mb-1.5 mt-2">Cena ręczna (PLN/oz)</label>
+                    <div class="flex items-center gap-3">
+                        <input type="number" id="silverPriceInput" step="0.01" oninput="updateSilverPrice()" class="w-full bg-[#2b3139] border border-[#474d57] rounded-xl p-2.5 text-sm focus:outline-none focus:border-[#e5e7eb] transition-colors text-white font-mono">
+                    </div>
+                    <p class="text-[10px] text-[#848e9c] mt-2 font-medium">W przeliczeniu: <span id="silverGramPriceDisplay" class="font-bold text-white font-mono">0.00</span> PLN/g</p>
+                </div>
+            </div>
+
+            <!-- Formularz Dodawania -->
+            <div class="card-bg shadow-2xl overflow-hidden">
+                <button onclick="toggleSection('addSection', 'addIcon')" class="w-full px-4 py-4 md:px-6 md:py-5 flex justify-between items-center cursor-pointer focus:outline-none hover:bg-[#2b3139]/50 transition-colors">
+                    <h2 id="formTitle" class="text-lg font-bold flex items-center gold-text">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                        </svg>
+                        Dodaj zakup
+                    </h2>
+                    <svg id="addIcon" class="h-5 w-5 text-[#f3ba2f] transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                </button>
+                <div id="addSection" class="hidden px-4 pb-4 md:px-6 md:pb-6 space-y-3 md:space-y-4">
+                    <input type="hidden" id="editId">
+                    
+                    <!-- Wybór Kruszcu -->
+                    <div>
+                        <label class="block text-[11px] font-bold text-[#848e9c] uppercase mb-1.5">Kruszec</label>
+                        <div class="grid grid-cols-2 gap-2 mb-2">
+                            <button type="button" onclick="setMetal('gold')" id="btnMetalGold" class="border border-[#f3ba2f] bg-[#f3ba2f] text-black py-2.5 rounded-xl text-xs font-bold transition-all shadow-lg shadow-[#f3ba2f]/20">Złoto</button>
+                            <button type="button" onclick="setMetal('silver')" id="btnMetalSilver" class="border border-[#474d57] bg-[#2b3139] text-[#848e9c] py-2.5 rounded-xl text-xs font-bold transition-all hover:text-white hover:border-[#e5e7eb]">Srebro</button>
+                        </div>
+                        <input type="hidden" id="itemMetal" value="gold">
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-bold text-[#848e9c] uppercase mb-1.5">Rodzaj produktu</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button type="button" onclick="setType('Sztabka')" id="btnSztabka" class="type-btn active border border-[#f3ba2f] bg-[#f3ba2f] text-black py-2.5 rounded-xl text-xs font-bold transition-all">Sztabka</button>
+                            <button type="button" onclick="setType('Moneta')" id="btnMoneta" class="type-btn border border-[#474d57] bg-[#2b3139] text-white py-2.5 rounded-xl text-xs font-bold transition-all">Moneta</button>
+                        </div>
+                        <input type="hidden" id="itemType" value="Sztabka">
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-bold text-[#848e9c] uppercase mb-1.5">Nazwa</label>
+                        <input type="text" id="itemName" placeholder="np. Krugerrand 1oz" class="w-full bg-[#2b3139] border border-[#474d57] rounded-xl p-3 text-sm focus:outline-none focus:border-[#f3ba2f] transition-colors">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 mb-3">
+                        <div>
+                            <label class="block text-[11px] font-bold text-[#848e9c] uppercase mb-1.5">Waga (g)</label>
+                            <input type="number" id="itemWeight" step="0.001" placeholder="31.1" class="w-full bg-[#2b3139] border border-[#474d57] rounded-xl p-3 text-sm focus:outline-none focus:border-[#f3ba2f]">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-[#848e9c] uppercase mb-1.5">Koszt (PLN)</label>
+                            <input type="number" id="itemPrice" step="0.01" placeholder="8500" class="w-full bg-[#2b3139] border border-[#474d57] rounded-xl p-3 text-sm focus:outline-none focus:border-[#f3ba2f]">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-bold text-[#848e9c] uppercase mb-1.5">Data zakupu</label>
+                            <input type="text" id="itemDateManual" placeholder="DD.MM.RRRR" class="w-full bg-[#2b3139] border border-[#474d57] rounded-xl p-3 text-sm focus:outline-none focus:border-[#f3ba2f]">
+                        </div>
+                        <div id="dealerPriceContainer">
+                            <label class="block text-[11px] font-bold text-[#848e9c] uppercase mb-1.5">Wartość u dilera</label>
+                            <input type="number" id="itemDealerPrice" step="0.01" placeholder="Opcjonalnie (PLN)" class="w-full bg-[#2b3139] border border-[#474d57] rounded-xl p-3 text-sm focus:outline-none focus:border-[#f3ba2f]">
+                        </div>
+                    </div>
+                    <div class="flex gap-2 pt-2">
+                        <button id="submitBtn" onclick="addToPortfolio()" class="flex-grow gold-glow text-black font-extrabold py-3 rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-[#f3ba2f]/10">Zapisz</button>
+                        <button id="cancelEditBtn" onclick="resetForm()" class="hidden bg-gray-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-gray-500 transition-colors">Anuluj</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEKCJA LINKÓW -->
+            <div class="card-bg overflow-hidden shadow-xl">
+                <button onclick="toggleSection('linksSection', 'linksIcon')" class="w-full px-4 py-4 md:px-6 md:py-5 flex justify-between items-center cursor-pointer focus:outline-none hover:bg-[#2b3139]/50 transition-colors">
+                    <h3 class="text-xs font-extrabold text-[#848e9c] uppercase tracking-[0.1em] flex items-center">
+                        <span class="mr-2">🔗</span> Przydatne linki
+                    </h3>
+                    <svg id="linksIcon" class="h-4 w-4 text-[#848e9c] transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                </button>
+                <div id="linksSection" class="hidden px-4 pb-4 pt-2 md:px-6 md:pb-6 md:pt-4">
+                    <button onclick="toggleLinkForm()" class="w-full mb-4 border border-[#f3ba2f] text-[#f3ba2f] text-xs font-bold py-2.5 rounded-xl hover:bg-[#f3ba2f]/10 transition-colors flex items-center justify-center gap-1.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+                        Dodaj nowy link
+                    </button>
+
+                    <div id="linkForm" class="hidden space-y-3 mb-6 p-4 bg-black/20 rounded-2xl border border-[#474d57]/50">
+                        <input type="text" id="linkTitle" placeholder="Tytuł strony" class="w-full bg-[#2b3139] border border-[#474d57] rounded-lg p-2 text-xs focus:outline-none focus:border-[#f3ba2f]">
+                        <input type="text" id="linkUrl" placeholder="https://..." class="w-full bg-[#2b3139] border border-[#474d57] rounded-lg p-2 text-xs focus:outline-none focus:border-[#f3ba2f]">
+                        <textarea id="linkDesc" placeholder="Krótki opis (opcjonalnie)" class="w-full bg-[#2b3139] border border-[#474d57] rounded-lg p-2 text-xs focus:outline-none focus:border-[#f3ba2f] h-16 resize-none"></textarea>
+                        <div class="flex gap-2">
+                            <button onclick="saveLink()" class="flex-grow gold-glow text-black font-bold py-2 rounded-lg text-xs">Dodaj</button>
+                            <button onclick="toggleLinkForm()" class="px-3 py-2 bg-gray-600 text-white rounded-lg text-xs">Anuluj</button>
+                        </div>
+                    </div>
+
+                    <div id="links-list" class="space-y-2 md:space-y-3"></div>
+                </div>
+            </div>
+
+            <!-- KOPIA ZAPASOWA -->
+            <div class="card-bg overflow-hidden shadow-xl">
+                <button onclick="toggleSection('backupSection', 'backupIcon')" class="w-full px-4 py-4 md:px-6 md:py-5 flex justify-between items-center cursor-pointer focus:outline-none hover:bg-[#2b3139]/50 transition-colors">
+                    <h3 class="text-xs font-extrabold text-[#848e9c] uppercase tracking-wider">Kopia zapasowa</h3>
+                    <svg id="backupIcon" class="h-4 w-4 text-[#848e9c] transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                </button>
+                <div id="backupSection" class="hidden px-4 pb-4 pt-2 md:px-6 md:pb-6 md:pt-4">
+                    <div class="grid grid-cols-2 gap-2 mb-2">
+                        <button onclick="exportData()" class="border border-[#474d57] bg-[#2b3139] hover:bg-[#474d57] text-white text-[10px] py-2.5 rounded-xl transition-colors uppercase font-bold flex items-center justify-center gap-1.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                            Eksport
+                        </button>
+                        <button onclick="document.getElementById('importFile').click()" class="border border-[#474d57] bg-[#2b3139] hover:bg-[#474d57] text-white text-[10px] py-2.5 rounded-xl transition-colors uppercase font-bold flex items-center justify-center gap-1.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                            Import
+                        </button>
+                        <input type="file" id="importFile" accept=".json" class="hidden" onchange="importData(event)">
+                    </div>
+                    <button onclick="clearAllData()" class="w-full border border-[#f6465d]/30 text-[#f6465d] text-[10px] py-2.5 rounded-xl hover:bg-[#f6465d]/10 transition-colors uppercase font-bold">Wyczyść dane portfela</button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- PRAWA KOLUMNA -->
+        <div class="lg:col-span-3 space-y-4 md:space-y-6">
+            
+            <!-- Statystyki Główne (Złoto + Srebro) -->
+            <div class="card-bg overflow-hidden shadow-xl">
+                <div class="grid grid-cols-2 md:grid-cols-4 w-full">
+                    <!-- Posiadane kruszce -->
+                    <div id="weightUnitToggle" onclick="toggleWeightUnit()" class="p-4 md:p-5 hover:bg-[#2b3139]/70 group flex flex-col justify-center gap-1.5 h-full min-h-[100px] md:min-h-[110px] relative min-w-0 border-b md:border-b-0 border-r border-[#474d57] cursor-pointer transition-colors">
+                        <div class="absolute top-4 right-4 md:top-5 md:right-5">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 md:h-4 md:w-4 text-[#848e9c] group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                            </svg>
+                        </div>
+                        <p class="text-[9px] sm:text-[10px] md:text-xs text-[#848e9c] uppercase font-bold tracking-wider">Posiadane kruszce</p>
+                        <div class="flex flex-col gap-0.5 sm:gap-1">
+                            <p id="goldAmountDisplay" class="text-sm sm:text-base md:text-lg lg:text-xl font-black gold-text leading-none tracking-tight truncate">0.00 oz Au</p>
+                            <p id="silverAmountDisplay" class="text-sm sm:text-base md:text-lg lg:text-xl font-black text-[#e5e7eb] leading-none tracking-tight truncate">0.00 oz Ag</p>
+                        </div>
+                    </div>
+
+                    <!-- Łączny koszt -->
+                    <div class="p-4 md:p-5 flex flex-col justify-center gap-1.5 h-full min-h-[100px] md:min-h-[110px] min-w-0 border-b md:border-b-0 md:border-r border-[#474d57]">
+                        <p class="text-[9px] sm:text-[10px] md:text-xs text-[#848e9c] uppercase font-bold tracking-wider">Łączny koszt</p>
+                        <p id="totalSpent" class="text-lg sm:text-xl md:text-2xl lg:text-[1.35rem] xl:text-3xl font-black leading-none tracking-tight truncate">0.00 PLN</p>
+                    </div>
+
+                    <!-- Wartość rynkowa -->
+                    <div class="p-4 md:p-5 flex flex-col justify-center gap-1.5 h-full min-h-[100px] md:min-h-[110px] min-w-0 border-r border-[#474d57]">
+                        <p class="text-[9px] sm:text-[10px] md:text-xs text-[#848e9c] uppercase font-bold tracking-wider">Wartość rynkowa</p>
+                        <p id="totalValue" class="text-lg sm:text-xl md:text-2xl lg:text-[1.35rem] xl:text-3xl font-black leading-none tracking-tight truncate">0 PLN</p>
+                    </div>
+
+                    <!-- Wynik całkowity -->
+                    <div class="p-4 md:p-5 flex flex-col justify-center gap-1.5 h-full min-h-[100px] md:min-h-[110px] min-w-0">
+                        <p class="text-[9px] sm:text-[10px] md:text-xs text-[#848e9c] uppercase font-bold tracking-wider">Wynik całkowity</p>
+                        <div class="flex flex-col gap-0.5 sm:gap-1">
+                            <div class="flex items-baseline gap-1.5">
+                                <span class="text-[9px] sm:text-[10px] font-bold gold-text uppercase w-5 flex-shrink-0">Au:</span>
+                                <div class="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+                                    <span id="totalProfitGold" class="text-sm sm:text-base md:text-lg lg:text-xl font-black leading-none tracking-tight">0 PLN</span>
+                                    <span id="totalProfitGoldDealer" class="text-[10px] md:text-xs font-bold opacity-80 whitespace-nowrap"></span>
+                                </div>
+                            </div>
+                            <div class="flex items-baseline gap-1.5">
+                                <span class="text-[9px] sm:text-[10px] font-bold text-[#e5e7eb] uppercase w-5 flex-shrink-0">Ag:</span>
+                                <div class="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+                                    <span id="totalProfitSilver" class="text-sm sm:text-base md:text-lg lg:text-xl font-black leading-none tracking-tight">0 PLN</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Globalna wyszukiwarka -->
+            <div class="relative w-full mb-2">
+                <input type="text" id="searchInput" oninput="renderPortfolio()" placeholder="Szukaj w złocie i srebrze..." class="w-full bg-black/30 border border-[#474d57]/50 rounded-none py-3 pl-10 pr-4 text-sm focus:outline-none focus:border-[#f3ba2f] transition-all text-white placeholder-[#848e9c]">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 absolute left-3 top-3 text-[#848e9c]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+            </div>
+
+            <!-- Tabela Inwestycji: ZŁOTO -->
+            <div class="card-bg shadow-2xl overflow-hidden flex flex-col">
+                <div class="p-4 md:p-6 border-b border-[#474d57] flex justify-between items-center gap-2">
+                    <h2 class="text-base md:text-lg font-bold flex items-center gold-text whitespace-nowrap">
+                        Złoto
+                    </h2>
+                    <div class="text-right flex flex-col justify-center whitespace-nowrap">
+                        <span class="text-[9px] md:text-[10px] text-[#848e9c] uppercase font-bold tracking-wider mb-0.5">Wynik (dzisiejszy)</span>
+                        <span id="dailyGoldProfit" class="text-sm md:text-base font-extrabold text-[#848e9c] transition-colors duration-300">0.00 PLN</span>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto pb-2">
+                    <table class="w-full text-left whitespace-nowrap lg:whitespace-normal">
+                        <thead class="bg-[#2b3139]/30">
+                            <tr id="goldSortHeaders" class="text-[#848e9c] text-[10px] uppercase border-b border-[#474d57] leading-tight">
+                                <th class="px-2 lg:px-1 xl:px-2 py-3 font-bold whitespace-nowrap lg:whitespace-normal">Produkt</th>
+                                <th class="px-2 lg:px-1 xl:px-2 py-3 font-bold sort-header whitespace-nowrap lg:whitespace-normal" data-sort="weight" onclick="setSort('weight', 'gold')">Waga <span class="sort-icon">⇅</span></th>
+                                <th class="px-2 lg:px-1 xl:px-2 py-3 font-bold sort-header whitespace-nowrap lg:whitespace-normal" data-sort="date" onclick="setSort('date', 'gold')">Data <span class="sort-icon">⇅</span></th>
+                                <th class="px-2 lg:px-1 xl:px-2 py-3 font-bold text-right sort-header whitespace-nowrap lg:whitespace-normal" data-sort="price" onclick="setSort('price', 'gold')">Cena zakupu <span class="sort-icon">⇅</span></th>
+                                <th class="px-2 lg:px-1 xl:px-2 py-3 font-bold text-right sort-header whitespace-nowrap lg:whitespace-normal" data-sort="value" onclick="setSort('value', 'gold')">Aktualna wartość <span class="sort-icon">⇅</span></th>
+                                <th class="px-2 lg:px-1 xl:px-2 py-3 font-bold text-right sort-header whitespace-nowrap lg:whitespace-normal" data-sort="profit" onclick="setSort('profit', 'gold')">Zysk/Strata <span class="sort-icon">⇅</span></th>
+                                <th class="px-2 lg:px-1 xl:px-2 py-3 font-bold text-right sort-header whitespace-nowrap lg:whitespace-normal" data-sort="dealerPrice" onclick="setSort('dealerPrice', 'gold')">Wartość u dilera <span class="sort-icon">⇅</span></th>
+                                <th class="px-2 lg:px-1 xl:px-2 py-3 font-bold text-right sort-header whitespace-nowrap lg:whitespace-normal" data-sort="dealerProfit" onclick="setSort('dealerProfit', 'gold')">Zysk Diler <span class="sort-icon">⇅</span></th>
+                                <th class="px-2 lg:px-1 xl:px-2 py-3 text-center whitespace-nowrap lg:whitespace-normal">Opcje</th>
+                            </tr>
+                        </thead>
+                        <tbody id="portfolioListGold" class="divide-y divide-[#474d57]/30"></tbody>
+                    </table>
+                </div>
+                
+                <div id="emptyMessageGold" class="flex-grow flex flex-col items-center justify-center py-12 text-[#848e9c]">
+                    <p class="text-xs">Brak złota w portfelu.</p>
+                </div>
+            </div>
+
+            <!-- Tabela Inwestycji: SREBRO -->
+            <div class="card-bg shadow-2xl overflow-hidden flex flex-col">
+                <div class="p-4 md:p-6 border-b border-[#474d57]">
+                    <h2 class="text-base md:text-lg font-bold flex items-center text-[#e5e7eb]">
+                        Srebro
+                    </h2>
+                </div>
+
+                <div class="overflow-x-auto pb-2">
+                    <table class="w-full text-left whitespace-nowrap lg:whitespace-normal">
+                        <thead class="bg-[#2b3139]/30">
+                            <tr id="silverSortHeaders" class="text-[#848e9c] text-[10px] uppercase border-b border-[#474d57] leading-tight">
+                                <th class="px-2 lg:px-1 xl:px-2 py-3 font-bold whitespace-nowrap lg:whitespace-normal">Produkt</th>
+                                <th class="px-2 lg:px-1 xl:px-2 py-3 font-bold sort-header whitespace-nowrap lg:whitespace-normal" data-sort="weight" onclick="setSort('weight', 'silver')">Waga <span class="sort-icon">⇅</span></th>
+                                <th class="px-2 lg:px-1 xl:px-2 py-3 font-bold sort-header whitespace-nowrap lg:whitespace-normal" data-sort="date" onclick="setSort('date', 'silver')">Data <span class="sort-icon">⇅</span></th>
+                                <th class="px-2 lg:px-1 xl:px-2 py-3 font-bold text-right sort-header whitespace-nowrap lg:whitespace-normal" data-sort="price" onclick="setSort('price', 'silver')">Cena zakupu <span class="sort-icon">⇅</span></th>
+                                <th class="px-2 lg:px-1 xl:px-2 py-3 font-bold text-right sort-header whitespace-nowrap lg:whitespace-normal" data-sort="value" onclick="setSort('value', 'silver')">Aktualna wartość <span class="sort-icon">⇅</span></th>
+                                <th class="px-2 lg:px-1 xl:px-2 py-3 font-bold text-right sort-header whitespace-nowrap lg:whitespace-normal" data-sort="profit" onclick="setSort('profit', 'silver')">Zysk/Strata <span class="sort-icon">⇅</span></th>
+                                <th class="px-2 lg:px-1 xl:px-2 py-3 text-center whitespace-nowrap lg:whitespace-normal">Opcje</th>
+                            </tr>
+                        </thead>
+                        <tbody id="portfolioListSilver" class="divide-y divide-[#474d57]/30"></tbody>
+                    </table>
+                </div>
+                
+                <div id="emptyMessageSilver" class="flex-grow flex flex-col items-center justify-center py-12 text-[#848e9c]">
+                    <p class="text-xs">Brak srebra w portfelu.</p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Modal Message Box -->
+    <div id="messageBox" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-[#1e2329] border border-[#474d57] max-w-sm w-full p-6 shadow-2xl">
+            <h3 id="messageBoxTitle" class="text-lg font-bold text-white mb-2">Potwierdzenie</h3>
+            <p id="messageBoxText" class="text-sm text-[#848e9c] mb-6">Czy na pewno chcesz wykonać tę akcję?</p>
+            <div class="flex justify-end gap-3">
+                <button id="messageBoxCancel" onclick="closeMessageBox()" class="px-4 py-2 rounded-lg text-sm font-bold text-white bg-[#2b3139] hover:bg-[#474d57] transition-colors border border-[#474d57]">Anuluj</button>
+                <button id="messageBoxConfirm" class="px-4 py-2 rounded-lg text-sm font-bold text-white bg-[#f6465d] hover:bg-red-600 transition-colors">Wyczyść</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const pricePLNElement = document.getElementById('pricePLN');
+        const priceUSDElement = document.getElementById('priceUSD');
+        const priceGramPLNElement = document.getElementById('priceGramPLN');
+        const changePLNElement = document.getElementById('changePLN');
+        const changeUSDElement = document.getElementById('changeUSD');
+        const lastUpdateElement = document.getElementById('lastUpdate');
+        const countdownElement = document.getElementById('countdown');
+        const statusDot = document.getElementById('statusDot');
+        
+        const portfolioListGold = document.getElementById('portfolioListGold');
+        const emptyMessageGold = document.getElementById('emptyMessageGold');
+        const portfolioListSilver = document.getElementById('portfolioListSilver');
+        const emptyMessageSilver = document.getElementById('emptyMessageSilver');
+
+        const totalProfitGoldElement = document.getElementById('totalProfitGold');
+        const totalProfitSilverElement = document.getElementById('totalProfitSilver');
+        const totalSpentElement = document.getElementById('totalSpent');
+        const totalValueElement = document.getElementById('totalValue');
+        const goldAmountDisplay = document.getElementById('goldAmountDisplay');
+        const silverAmountDisplay = document.getElementById('silverAmountDisplay');
+        const searchInput = document.getElementById('searchInput');
+
+        const editIdInput = document.getElementById('editId');
+        const itemNameInput = document.getElementById('itemName');
+        const itemWeightInput = document.getElementById('itemWeight');
+        const itemPriceInput = document.getElementById('itemPrice');
+        const itemDateManualInput = document.getElementById('itemDateManual');
+        const itemDealerPriceInput = document.getElementById('itemDealerPrice');
+        const itemTypeInput = document.getElementById('itemType');
+        const itemMetalInput = document.getElementById('itemMetal');
+        const submitBtn = document.getElementById('submitBtn');
+        const cancelEditBtn = document.getElementById('cancelEditBtn');
+        const formTitle = document.getElementById('formTitle');
+        const messageBox = document.getElementById('messageBox');
+        const messageBoxTitle = document.getElementById('messageBoxTitle');
+        const messageBoxCancel = document.getElementById('messageBoxCancel');
+        const messageBoxConfirmBtn = document.getElementById('messageBoxConfirm');
+        
+        const linkForm = document.getElementById('linkForm');
+        const linkTitleInput = document.getElementById('linkTitle');
+        const linkUrlInput = document.getElementById('linkUrl');
+        const linkDescInput = document.getElementById('linkDesc');
+        const linksListContainer = document.getElementById('links-list');
+
+        function toggleSection(sectionId, iconId) {
+            const section = document.getElementById(sectionId);
+            const icon = document.getElementById(iconId);
+            if (section.classList.contains('hidden')) {
+                section.classList.remove('hidden');
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                section.classList.add('hidden');
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        let messageBoxCallback = null;
+        let currentGramPricePLN = 0; 
+        let countdown = 5;
+        const OZ_TO_GRAMS = 31.1034768;
+        
+        let currentWeightUnit = localStorage.getItem('gold_weight_unit') || 'oz';
+        let sortGold = { field: 'id', order: 'desc' };
+        let sortSilver = { field: 'id', order: 'desc' };
+        let portfolio = JSON.parse(localStorage.getItem('gold_portfolio')) || [];
+        let savedLinks = JSON.parse(localStorage.getItem('gold_links')) || [
+            { id: 1, title: 'Binance (XAU/PLN)', url: 'https://www.binance.com', desc: 'Podstawowe źródło danych rynkowych.' }
+        ];
+
+        // Srebro state
+        let manualSilverPriceOz = parseFloat(localStorage.getItem('silver_price_oz')) || 120.00;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const today = new Date();
+            itemDateManualInput.value = `${String(today.getDate()).padStart(2, '0')}.${String(today.getMonth() + 1).padStart(2, '0')}.${today.getFullYear()}`;
+            
+            // Inicjalizacja ceny srebra
+            document.getElementById('silverPriceInput').value = manualSilverPriceOz.toFixed(2);
+            document.getElementById('silverGramPriceDisplay').innerText = (manualSilverPriceOz / OZ_TO_GRAMS).toFixed(2);
+
+            renderLinks();
+            fetchBinanceData();
+            updateExchangeStatus();
+            setInterval(updateExchangeStatus, 10000); // Aktualizacja statusu giełd co 10 sekund
+        });
+
+        function updateExchangeStatus() {
+            const now = new Date();
+            const day = now.getUTCDay(); // 0 to niedziela, 6 to sobota
+            const isWeekend = day === 0 || day === 6;
+
+            const exchanges = [
+                { id: 'ex-shanghai', tz: 'Asia/Shanghai', open: 9.5, close: 15 }, // 09:30 - 15:00 czasu lokalnego
+                { id: 'ex-london', tz: 'Europe/London', open: 8, close: 16.5 },   // 08:00 - 16:30 czasu lokalnego
+                { id: 'ex-newyork', tz: 'America/New_York', open: 9.5, close: 16 } // 09:30 - 16:00 czasu lokalnego
+            ];
+
+            let openCount = 0;
+            const statusMap = {};
+
+            exchanges.forEach(ex => {
+                if (isWeekend) {
+                    statusMap[ex.id] = 'closed';
+                } else {
+                    try {
+                        const options = { timeZone: ex.tz, hour: 'numeric', minute: 'numeric', hour12: false };
+                        const timeString = new Intl.DateTimeFormat('en-US', options).format(now);
+                        const parts = timeString.split(':');
+                        
+                        let hour = parseInt(parts[0], 10);
+                        if (hour === 24) hour = 0;
+                        const min = parseInt(parts[1], 10);
+                        const timeFloat = hour + min / 60;
+
+                        if (timeFloat >= ex.open && timeFloat < ex.close) {
+                            statusMap[ex.id] = 'open';
+                            openCount++;
+                        } else {
+                            statusMap[ex.id] = 'closed';
+                        }
+                    } catch (e) {
+                        console.error("Błąd strefy czasowej", e);
+                        statusMap[ex.id] = 'closed';
+                    }
+                }
+            });
+
+            exchanges.forEach(ex => {
+                const el = document.getElementById(ex.id);
+                if (!el) return;
+                
+                el.classList.remove('text-[#f6465d]', 'text-[#0ecb81]', 'text-[#f3ba2f]', 'text-[#848e9c]');
+                
+                if (statusMap[ex.id] === 'closed') {
+                    el.classList.add('text-[#f6465d]'); // Czerwony - zamknięta
+                } else if (statusMap[ex.id] === 'open') {
+                    if (openCount > 1) {
+                        el.classList.add('text-[#f3ba2f]'); // Złoty - pokrywa się z inną
+                    } else {
+                        el.classList.add('text-[#0ecb81]'); // Zielony - otwarta jako jedyna
+                    }
+                }
+            });
+        }
+
+        function updateSilverPrice() {
+            const val = parseFloat(document.getElementById('silverPriceInput').value);
+            if (!isNaN(val) && val > 0) {
+                manualSilverPriceOz = val;
+                localStorage.setItem('silver_price_oz', manualSilverPriceOz);
+                document.getElementById('silverGramPriceDisplay').innerText = (manualSilverPriceOz / OZ_TO_GRAMS).toFixed(2);
+                renderPortfolio();
+            }
+        }
+
+        function toggleWeightUnit() {
+            currentWeightUnit = currentWeightUnit === 'oz' ? 'g' : 'oz';
+            localStorage.setItem('gold_weight_unit', currentWeightUnit);
+            renderPortfolio();
+        }
+
+        function toggleLinkForm() {
+            linkForm.classList.toggle('hidden');
+            if(!linkForm.classList.contains('hidden')) linkTitleInput.focus();
+        }
+
+        function saveLink() {
+            const title = linkTitleInput.value.trim();
+            let url = linkUrlInput.value.trim();
+            const desc = linkDescInput.value.trim();
+            if (!title || !url) return;
+            if (!url.startsWith('http')) url = 'https://' + url;
+            const newLink = { id: Date.now(), title, url, desc };
+            savedLinks.push(newLink);
+            localStorage.setItem('gold_links', JSON.stringify(savedLinks));
+            linkTitleInput.value = ''; linkUrlInput.value = ''; linkDescInput.value = '';
+            toggleLinkForm(); renderLinks();
+        }
+
+        function deleteLink(id) {
+            savedLinks = savedLinks.filter(l => l.id !== id);
+            localStorage.setItem('gold_links', JSON.stringify(savedLinks));
+            renderLinks();
+        }
+
+        function renderLinks() {
+            linksListContainer.innerHTML = savedLinks.map(link => {
+                const faviconUrl = `https://www.google.com/s2/favicons?domain=${link.url}&sz=32`;
+                return `
+                    <div class="group flex justify-between items-start bg-black/10 hover:bg-[#2b3139]/40 p-3 rounded-xl transition-all border border-transparent hover:border-[#474d57]">
+                        <a href="${link.url}" target="_blank" class="flex-grow flex items-center gap-3">
+                            <div class="flex-shrink-0 w-6 h-6 bg-[#2b3139] rounded-md flex items-center justify-center overflow-hidden border border-[#474d57]/30">
+                                <img src="${faviconUrl}" alt="" class="w-4 h-4 object-contain" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgZmlsbD0iI2FhYSIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTIgMmMyLjIxeiIvPjwvc3ZnPg=='">
+                            </div>
+                            <div>
+                                <span class="text-xs font-bold block text-white group-hover:gold-text transition-colors">${link.title}</span>
+                                ${link.desc ? `<span class="text-[10px] text-[#848e9c] line-clamp-1">${link.desc}</span>` : ''}
+                            </div>
+                        </a>
+                        <button onclick="deleteLink(${link.id})" class="text-[#f6465d] opacity-100 md:opacity-0 md:group-hover:opacity-100 p-2 md:p-1 transition-opacity">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-3.5 md:w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                    </div>`;
+            }).join('');
+            if (savedLinks.length === 0) linksListContainer.innerHTML = `<p class="text-[10px] text-center text-[#848e9c] py-4 italic">Brak zapisanych linków.</p>`;
+        }
+
+        async function fetchBinanceData() {
+            statusDot.className = 'h-2 w-2 rounded-full bg-yellow-500 animate-pulse';
+            try {
+                const response = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=["PAXGUSDT","USDTPLN"]');
+                const data = await response.json();
+                const paxg = data.find(t => t.symbol === "PAXGUSDT");
+                const usdt = data.find(t => t.symbol === "USDTPLN");
+                const priceXAU_USD = parseFloat(paxg.lastPrice);
+                const priceUSD_PLN = parseFloat(usdt.lastPrice);
+                const currentOuncePLN = priceXAU_USD * priceUSD_PLN;
+                currentGramPricePLN = currentOuncePLN / OZ_TO_GRAMS;
+                
+                // Obliczenie ceny otwarcia (24h temu) dla określenia dzisiejszego zysku/straty
+                const openXAU_USD = parseFloat(paxg.openPrice);
+                const openUSD_PLN = parseFloat(usdt.openPrice);
+                const openGramPricePLN = (openXAU_USD * openUSD_PLN) / OZ_TO_GRAMS;
+                window.goldDailyDiffPerGram = currentGramPricePLN - openGramPricePLN;
+
+                const diffPct = parseFloat(paxg.priceChangePercent);
+                const isUp = diffPct >= 0;
+                
+                const trendColorClass = isUp ? 'text-[#0ecb81]' : 'text-[#f6465d]';
+
+                // Sekcja PLN
+                pricePLNElement.innerText = currentOuncePLN.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " PLN";
+                pricePLNElement.className = `text-sm md:text-xl font-bold transition-colors duration-300 ${trendColorClass}`;
+                changePLNElement.innerText = `${isUp ? '▲' : '▼'} ${Math.abs(diffPct).toFixed(2)}%`;
+                changePLNElement.style.opacity = '1';
+                changePLNElement.className = `text-[9px] md:text-[10px] font-bold px-1.5 py-0.5 rounded ${isUp ? 'bg-[#0ecb81]/20 text-[#0ecb81]' : 'bg-[#f6465d]/20 text-[#f6465d]'}`;
+
+                // Sekcja USD
+                priceUSDElement.innerText = priceXAU_USD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " USD";
+                priceUSDElement.className = `text-sm md:text-xl font-bold transition-colors duration-300 ${trendColorClass}`;
+                changeUSDElement.innerText = `${isUp ? '▲' : '▼'} ${Math.abs(diffPct).toFixed(2)}%`;
+                changeUSDElement.style.opacity = '1';
+                changeUSDElement.className = `text-[9px] md:text-[10px] font-bold px-1.5 py-0.5 rounded ${isUp ? 'bg-[#0ecb81]/20 text-[#0ecb81]' : 'bg-[#f6465d]/20 text-[#f6465d]'}`;
+
+                // Cena za gram
+                priceGramPLNElement.innerText = currentGramPricePLN.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                
+                renderPortfolio();
+                lastUpdateElement.innerText = `Aktualizacja: ${new Date().toLocaleTimeString()}`;
+                statusDot.className = 'h-2 w-2 rounded-full bg-green-500';
+            } catch (error) {
+                console.error("API Error:", error);
+                statusDot.className = 'h-2 w-2 rounded-full bg-red-500';
+            }
+        }
+
+        function setSort(field, metal) {
+            const sortState = metal === 'gold' ? sortGold : sortSilver;
+            if (sortState.field === field) {
+                sortState.order = sortState.order === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortState.field = field;
+                sortState.order = 'desc';
+            }
+            updateSortUI();
+            renderPortfolio();
+        }
+
+        function updateSortUI() {
+            document.querySelectorAll('#goldSortHeaders .sort-header').forEach(h => {
+                h.classList.remove('active'); 
+                h.querySelector('.sort-icon').innerText = '⇅';
+                if (h.dataset.sort === sortGold.field) {
+                    h.classList.add('active');
+                    h.querySelector('.sort-icon').innerText = sortGold.order === 'asc' ? '▲' : '▼';
+                }
+            });
+            document.querySelectorAll('#silverSortHeaders .sort-header').forEach(h => {
+                h.classList.remove('active'); 
+                h.querySelector('.sort-icon').innerText = '⇅';
+                if (h.dataset.sort === sortSilver.field) {
+                    h.classList.add('active');
+                    h.querySelector('.sort-icon').innerText = sortSilver.order === 'asc' ? '▲' : '▼';
+                }
+            });
+            
+            const mobileSortGold = document.getElementById('mobileSortGold');
+            if(mobileSortGold) mobileSortGold.value = sortGold.field;
+            
+            const mobileSortSilver = document.getElementById('mobileSortSilver');
+            if(mobileSortSilver) mobileSortSilver.value = sortSilver.field;
+        }
+
+        function parseDate(d) {
+            const p = d.split('.');
+            return p.length === 3 ? new Date(p[2], p[1]-1, p[0]).getTime() : 0;
+        }
+
+        function addToPortfolio() {
+            const metal = itemMetalInput.value;
+            const name = itemNameInput.value || (itemTypeInput.value === 'Sztabka' ? `Sztabka ${metal === 'gold' ? 'złota' : 'srebra'}` : `${metal === 'gold' ? 'Złota' : 'Srebrna'} moneta`);
+            const weight = parseFloat(itemWeightInput.value);
+            const price = parseFloat(itemPriceInput.value);
+            
+            const dealerPrice = metal === 'gold' ? (parseFloat(itemDealerPriceInput.value) || null) : null;
+            const date = itemDateManualInput.value;
+            
+            if (!weight || !price) return;
+            
+            const currentSpot = metal === 'gold' ? currentGramPricePLN : (manualSilverPriceOz / OZ_TO_GRAMS);
+            let dealerSpotPrice = dealerPrice ? currentSpot : null;
+            
+            if (editIdInput.value) {
+                const idx = portfolio.findIndex(i => i.id == editIdInput.value);
+                if (idx !== -1) {
+                    const oldItem = portfolio[idx];
+                    if (dealerPrice && dealerPrice === oldItem.dealerPrice && oldItem.dealerSpotPrice) {
+                        dealerSpotPrice = oldItem.dealerSpotPrice;
+                    }
+                    const { spread, ...rest } = oldItem;
+                    portfolio[idx] = { ...rest, name, weight, buyPriceTotal: price, dealerPrice, dealerSpotPrice, date, type: itemTypeInput.value, metal };
+                }
+            } else {
+                portfolio.push({ id: Date.now(), name, weight, buyPriceTotal: price, dealerPrice, dealerSpotPrice, date, type: itemTypeInput.value, metal });
+            }
+            
+            localStorage.setItem('gold_portfolio', JSON.stringify(portfolio));
+            renderPortfolio(); resetForm();
+        }
+
+        function deleteItem(id) {
+            portfolio = portfolio.filter(i => i.id !== id);
+            localStorage.setItem('gold_portfolio', JSON.stringify(portfolio));
+            renderPortfolio();
+        }
+
+        function duplicateItem(id) {
+            const item = portfolio.find(i => i.id === id);
+            if (item) {
+                portfolio.push({ ...item, id: Date.now() });
+                localStorage.setItem('gold_portfolio', JSON.stringify(portfolio));
+                renderPortfolio();
+            }
+        }
+
+        function startEdit(id) {
+            const item = portfolio.find(i => i.id === id);
+            if (!item) return;
+            editIdInput.value = item.id; 
+            itemNameInput.value = item.name; 
+            itemWeightInput.value = item.weight;
+            itemPriceInput.value = item.buyPriceTotal; 
+            itemDealerPriceInput.value = item.dealerPrice || '';
+            itemDateManualInput.value = item.date; 
+            
+            setMetal(item.metal || 'gold');
+            setType(item.type);
+            
+            const addSection = document.getElementById('addSection');
+            const addIcon = document.getElementById('addIcon');
+            if (addSection.classList.contains('hidden')) {
+                addSection.classList.remove('hidden');
+                addIcon.style.transform = 'rotate(180deg)';
+            }
+
+            formTitle.innerText = "Edytuj wpis"; 
+            submitBtn.innerText = "Zapisz zmiany";
+            cancelEditBtn.classList.remove('hidden'); 
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function resetForm() {
+            editIdInput.value = ''; itemNameInput.value = ''; itemWeightInput.value = ''; itemPriceInput.value = ''; itemDealerPriceInput.value = '';
+            setMetal('gold');
+            setType('Sztabka');
+            formTitle.innerText = "Dodaj zakup"; submitBtn.innerText = "Zapisz";
+            cancelEditBtn.classList.add('hidden');
+        }
+
+        function setType(t) {
+            itemTypeInput.value = t;
+            const btnSztabka = document.getElementById('btnSztabka');
+            const btnMoneta = document.getElementById('btnMoneta');
+            
+            const isGold = itemMetalInput.value === 'gold';
+            const accentColor = isGold ? '#f3ba2f' : '#e5e7eb';
+            const textColor = isGold ? 'black' : 'black';
+
+            btnSztabka.className = `type-btn border py-2.5 rounded-xl text-xs font-bold transition-all ${t === 'Sztabka' ? `active bg-[${accentColor}] border-[${accentColor}] text-[${textColor}]` : 'border-[#474d57] bg-[#2b3139] text-white'}`;
+            btnMoneta.className = `type-btn border py-2.5 rounded-xl text-xs font-bold transition-all ${t === 'Moneta' ? `active bg-[${accentColor}] border-[${accentColor}] text-[${textColor}]` : 'border-[#474d57] bg-[#2b3139] text-white'}`;
+            
+            // Fix dynamically injected colors
+            if (t === 'Sztabka') {
+                btnSztabka.style.backgroundColor = accentColor; btnSztabka.style.borderColor = accentColor; btnSztabka.style.color = textColor;
+                btnMoneta.style = '';
+            } else {
+                btnMoneta.style.backgroundColor = accentColor; btnMoneta.style.borderColor = accentColor; btnMoneta.style.color = textColor;
+                btnSztabka.style = '';
+            }
+        }
+
+        function setMetal(m) {
+            itemMetalInput.value = m;
+            const g = document.getElementById('btnMetalGold');
+            const s = document.getElementById('btnMetalSilver');
+            const dealerContainer = document.getElementById('dealerPriceContainer');
+            
+            if(m === 'gold') {
+                g.className = "border border-[#f3ba2f] bg-[#f3ba2f] text-black py-2.5 rounded-xl text-xs font-bold transition-all shadow-lg shadow-[#f3ba2f]/20";
+                s.className = "border border-[#474d57] bg-[#2b3139] text-[#848e9c] py-2.5 rounded-xl text-xs font-bold transition-all hover:text-white hover:border-[#e5e7eb]";
+                if(dealerContainer) dealerContainer.classList.remove('hidden');
+            } else {
+                s.className = "border border-[#e5e7eb] bg-[#e5e7eb] text-black py-2.5 rounded-xl text-xs font-bold transition-all shadow-lg shadow-[#e5e7eb]/20";
+                g.className = "border border-[#474d57] bg-[#2b3139] text-[#848e9c] py-2.5 rounded-xl text-xs font-bold transition-all hover:text-white hover:border-[#f3ba2f]";
+                if(dealerContainer) dealerContainer.classList.add('hidden');
+            }
+            setType(itemTypeInput.value); // odśwież kolory przycisku typu
+        }
+
+        function showMessageBox(message, onConfirm, isInfo = false) {
+            document.getElementById('messageBoxText').innerText = message;
+            messageBoxCallback = onConfirm; 
+            
+            if (isInfo) {
+                messageBoxTitle.innerText = "Informacja";
+                messageBoxCancel.classList.add('hidden');
+                messageBoxConfirmBtn.innerText = "OK";
+                messageBoxConfirmBtn.className = "px-4 py-2 rounded-lg text-sm font-bold text-black bg-[#f3ba2f] hover:opacity-90 transition-colors";
+            } else {
+                messageBoxTitle.innerText = "Potwierdzenie";
+                messageBoxCancel.classList.remove('hidden');
+                messageBoxConfirmBtn.innerText = "Wyczyść";
+                messageBoxConfirmBtn.className = "px-4 py-2 rounded-lg text-sm font-bold text-white bg-[#f6465d] hover:bg-red-600 transition-colors";
+            }
+            
+            messageBox.classList.remove('hidden');
+        }
+
+        function closeMessageBox() { messageBox.classList.add('hidden'); messageBoxCallback = null; }
+
+        document.getElementById('messageBoxConfirm').addEventListener('click', () => {
+            if (messageBoxCallback) messageBoxCallback(); 
+            closeMessageBox();
+        });
+
+        function clearAllData() {
+            showMessageBox('Czy na pewno chcesz usunąć wszystkie dane portfela?', () => {
+                portfolio = []; localStorage.removeItem('gold_portfolio'); renderPortfolio();
+            });
+        }
+
+        function exportData() {
+            const dataToExport = {
+                portfolio: portfolio,
+                links: savedLinks,
+                weightUnit: currentWeightUnit,
+                silverPriceOz: manualSilverPriceOz
+            };
+            const dataStr = JSON.stringify(dataToExport, null, 2);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            const date = new Date().toISOString().split('T')[0];
+            a.download = `portfel_backup_${date}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (importedData && importedData.portfolio) {
+                        portfolio = importedData.portfolio;
+                        localStorage.setItem('gold_portfolio', JSON.stringify(portfolio));
+                        
+                        if (importedData.links) {
+                            savedLinks = importedData.links;
+                            localStorage.setItem('gold_links', JSON.stringify(savedLinks));
+                        }
+                        
+                        if (importedData.weightUnit) {
+                            currentWeightUnit = importedData.weightUnit;
+                            localStorage.setItem('gold_weight_unit', currentWeightUnit);
+                        }
+                        
+                        if (importedData.silverPriceOz) {
+                            manualSilverPriceOz = importedData.silverPriceOz;
+                            localStorage.setItem('silver_price_oz', manualSilverPriceOz);
+                            document.getElementById('silverPriceInput').value = manualSilverPriceOz.toFixed(2);
+                        }
+
+                        renderPortfolio();
+                        renderLinks();
+                        showMessageBox('Dane zostały pomyślnie zaimportowane!', null, true);
+                    } else {
+                        showMessageBox('Nieprawidłowy format pliku z kopią zapasową.', null, true);
+                    }
+                } catch (error) {
+                    showMessageBox('Wystąpił błąd podczas odczytu pliku.', null, true);
+                }
+                event.target.value = ''; 
+            };
+            reader.readAsText(file);
+        }
+
+        function renderTableRows(items, container, emptyMessage, pricePerGram, isGold) {
+            if (items.length === 0) {
+                container.innerHTML = '';
+                emptyMessage.classList.remove('hidden');
+                return;
+            }
+            emptyMessage.classList.add('hidden');
+            
+            const colorClass = isGold ? 'bg-[#f3ba2f]' : 'bg-[#e5e7eb]';
+            const hoverColor = isGold ? 'text-[#f3ba2f]' : 'text-[#e5e7eb]';
+
+            // Zarządzanie istniejącymi wierszami (zapobiega resetowaniu tabeli)
+            const currentIds = new Set(items.map(i => i.id.toString()));
+            Array.from(container.children).forEach(child => {
+                if (!currentIds.has(child.dataset.id)) child.remove();
+            });
+
+            items.forEach((item, index) => {
+                const curVal = pricePerGram * item.weight;
+                const profit = curVal - item.buyPriceTotal;
+                const profitPct = (profit / item.buyPriceTotal) * 100;
+                
+                let dynamicDealerPrice = null;
+
+                if (item.dealerPrice) {
+                    dynamicDealerPrice = item.dealerSpotPrice ? item.dealerPrice * (pricePerGram / item.dealerSpotPrice) : item.dealerPrice;
+                } else if (item.spread !== undefined && item.spread !== null) {
+                    dynamicDealerPrice = curVal * (1 - (item.spread / 100));
+                }
+
+                // Formatowanie z wymuszeniem dwóch miejsc po przecinku
+                const formatVal = (v) => v.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const formatProfit = (v) => Math.abs(v).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+                const dealerPriceContent = dynamicDealerPrice !== null 
+                    ? `<span class="block text-white font-semibold whitespace-nowrap">${formatVal(dynamicDealerPrice)} PLN</span>`
+                    : '<span class="text-[#474d57]">-</span>';
+                
+                let dealerProfitContent = `<span class="text-[#474d57]">-</span>`;
+
+                if (dynamicDealerPrice !== null) {
+                    const dProfit = dynamicDealerPrice - item.buyPriceTotal;
+                    const dProfitPct = (dProfit / item.buyPriceTotal) * 100;
+                    const dColor = dProfit >= 0 ? 'text-[#0ecb81]' : 'text-[#f6465d]';
+                    dealerProfitContent = `
+                        <span class="font-bold ${dColor} whitespace-nowrap">${formatProfit(dProfit)}</span>
+                        <span class="block text-[10px] ${dColor}">${Math.abs(dProfitPct).toFixed(2)}%</span>
+                    `;
+                }
+                
+                let dealerCols = isGold ? `
+                    <td class="px-2 lg:px-1 xl:px-2 py-3 align-middle text-right whitespace-nowrap lg:whitespace-normal cell-dealer-price">${dealerPriceContent}</td>
+                    <td class="px-2 lg:px-1 xl:px-2 py-3 align-middle text-right whitespace-nowrap lg:whitespace-normal cell-dealer-profit">${dealerProfitContent}</td>
+                ` : '';
+
+                const profitColor = profit >= 0 ? 'text-[#0ecb81]' : 'text-[#f6465d]';
+                const profitHtml = `
+                    <span class="font-bold ${profitColor} whitespace-nowrap">${formatProfit(profit)}</span>
+                    <span class="block text-[10px] ${profitColor}">${Math.abs(profitPct).toFixed(2)}%</span>
+                `;
+
+                let row = container.querySelector(`tr[data-id="${item.id}"]`);
+                
+                if (!row) {
+                    // Tworzenie nowego wiersza jeśli jeszcze nie istnieje
+                    row = document.createElement('tr');
+                    row.dataset.id = item.id;
+                    row.className = "group hover:bg-[#2b3139]/50 transition-colors text-xs";
+                    
+                    const shapeClass = item.type === 'Sztabka' ? 'w-1.5 h-3 rounded-[2px]' : 'w-2.5 h-2.5 rounded-full';
+
+                    row.innerHTML = `
+                        <td class="px-2 lg:px-1 xl:px-2 py-3 align-middle whitespace-nowrap lg:whitespace-normal">
+                            <div class="flex items-center">
+                                <div class="${shapeClass} ${colorClass} mr-2 flex-shrink-0"></div>
+                                <div>
+                                    <span class="block font-bold text-white text-xs whitespace-normal line-clamp-2">${item.name}</span>
+                                    <span class="text-[9px] text-[#848e9c] uppercase font-bold tracking-wider">${item.type}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-2 lg:px-1 xl:px-2 py-3 align-middle text-white font-medium whitespace-nowrap lg:whitespace-normal">${item.weight}g</td>
+                        <td class="px-2 lg:px-1 xl:px-2 py-3 align-middle text-[#848e9c] whitespace-nowrap lg:whitespace-normal">${item.date}</td>
+                        <td class="px-2 lg:px-1 xl:px-2 py-3 align-middle text-right text-white font-semibold whitespace-nowrap">${formatVal(item.buyPriceTotal)} PLN</td>
+                        <td class="px-2 lg:px-1 xl:px-2 py-3 align-middle text-right text-white font-semibold whitespace-nowrap cell-curval">${formatVal(curVal)} PLN</td>
+                        <td class="px-2 lg:px-1 xl:px-2 py-3 align-middle text-right whitespace-nowrap lg:whitespace-normal cell-profit">${profitHtml}</td>
+                        ${dealerCols}
+                        <td class="px-2 lg:px-1 xl:px-2 py-3 align-middle text-center whitespace-nowrap lg:whitespace-normal">
+                            <div class="flex justify-center gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                                <button onclick="duplicateItem(${item.id})" class="p-1 text-[#848e9c] hover:${hoverColor}"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" /></svg></button>
+                                <button onclick="startEdit(${item.id})" class="p-1 text-[#848e9c] hover:${hoverColor}"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button>
+                                <button onclick="deleteItem(${item.id})" class="p-1 text-[#f6465d] hover:text-[#f6465d]"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" /></svg></button>
+                            </div>
+                        </td>`;
+                    container.appendChild(row);
+                } else {
+                    // Live aktualizacja istniejących komórek (bez usuwania wierszy)
+                    const curValCell = row.querySelector('.cell-curval');
+                    const profitCell = row.querySelector('.cell-profit');
+                    const dealerPriceCell = row.querySelector('.cell-dealer-price');
+                    const dealerProfitCell = row.querySelector('.cell-dealer-profit');
+
+                    if (curValCell && curValCell.innerHTML !== `${formatVal(curVal)} PLN`) {
+                        curValCell.innerHTML = `${formatVal(curVal)} PLN`;
+                    }
+                    if (profitCell && profitCell.innerHTML !== profitHtml) {
+                        profitCell.innerHTML = profitHtml;
+                    }
+                    if (isGold) {
+                        if (dealerPriceCell && dealerPriceCell.innerHTML !== dealerPriceContent) {
+                            dealerPriceCell.innerHTML = dealerPriceContent;
+                        }
+                        if (dealerProfitCell && dealerProfitCell.innerHTML !== dealerProfitContent) {
+                            dealerProfitCell.innerHTML = dealerProfitContent;
+                        }
+                    }
+                    
+                    // Utrzymanie odpowiedniego sortowania
+                    if (Array.from(container.children).indexOf(row) !== index) {
+                        container.insertBefore(row, container.children[index]);
+                    }
+                }
+            });
+        }
+
+        function renderPortfolio() {
+            const query = searchInput.value.toLowerCase().trim();
+            const silverGramPricePLN = manualSilverPriceOz / OZ_TO_GRAMS;
+
+            // Automatyczna naprawa starszych wpisów: jeśli wpis ma cenę dilera, ale nie ma ceny bazowej, przypisuje dzisiejszą
+            let needsSave = false;
+            portfolio.forEach(item => {
+                if (item.dealerPrice && !item.dealerSpotPrice) {
+                    const spot = (item.metal || 'gold') === 'gold' ? currentGramPricePLN : silverGramPricePLN;
+                    if (spot > 0) {
+                        item.dealerSpotPrice = spot;
+                        needsSave = true;
+                    }
+                }
+            });
+            if (needsSave) {
+                localStorage.setItem('gold_portfolio', JSON.stringify(portfolio));
+            }
+
+            const goldItemsBase = portfolio.filter(i => (i.metal || 'gold') === 'gold');
+            const silverItemsBase = portfolio.filter(i => i.metal === 'silver');
+
+            const filteredGold = goldItemsBase.filter(item => item.name.toLowerCase().includes(query) || item.type.toLowerCase().includes(query));
+            const filteredSilver = silverItemsBase.filter(item => item.name.toLowerCase().includes(query) || item.type.toLowerCase().includes(query));
+
+            const sortFn = (a, b, sortConfig, pricePerGram) => {
+                const getDynDP = (item) => {
+                    if (item.dealerPrice) {
+                        if (!item.dealerSpotPrice) return item.dealerPrice;
+                        return item.dealerPrice * (pricePerGram / item.dealerSpotPrice);
+                    }
+                    if (item.spread !== undefined && item.spread !== null) {
+                        return (item.weight * pricePerGram) * (1 - (item.spread / 100));
+                    }
+                    return null;
+                };
+
+                let vA, vB;
+                if (sortConfig.field === 'weight') { vA = a.weight; vB = b.weight; }
+                else if (sortConfig.field === 'date') { vA = parseDate(a.date); vB = parseDate(b.date); }
+                else if (sortConfig.field === 'price') { vA = a.buyPriceTotal; vB = b.buyPriceTotal; }
+                else if (sortConfig.field === 'value') { vA = a.weight * pricePerGram; vB = b.weight * pricePerGram; }
+                else if (sortConfig.field === 'dealerPrice') { 
+                    vA = getDynDP(a) || -Infinity; 
+                    vB = getDynDP(b) || -Infinity; 
+                }
+                else if (sortConfig.field === 'dealerProfit') { 
+                    const dA = getDynDP(a);
+                    const dB = getDynDP(b);
+                    vA = dA !== null ? dA - a.buyPriceTotal : -Infinity; 
+                    vB = dB !== null ? dB - b.buyPriceTotal : -Infinity; 
+                }
+                else if (sortConfig.field === 'profit') { vA = (a.weight * pricePerGram) - a.buyPriceTotal; vB = (b.weight * pricePerGram) - b.buyPriceTotal; }
+                else { vA = a.id; vB = b.id; }
+                return sortConfig.order === 'asc' ? vA - vB : vB - vA;
+            };
+
+            const sortedGold = [...filteredGold].sort((a, b) => sortFn(a, b, sortGold, currentGramPricePLN));
+            const sortedSilver = [...filteredSilver].sort((a, b) => sortFn(a, b, sortSilver, silverGramPricePLN));
+
+            renderTableRows(sortedGold, portfolioListGold, emptyMessageGold, currentGramPricePLN, true);
+            renderTableRows(sortedSilver, portfolioListSilver, emptyMessageSilver, silverGramPricePLN, false);
+
+            let totalSpent = 0, totalValMarket = 0, totalValDealer = 0;
+            let goldWeight = 0, silverWeight = 0;
+            let goldSpent = 0, goldValMarket = 0, goldValDealer = 0;
+            let silverSpent = 0, silverValMarket = 0, silverValDealer = 0;
+
+            portfolio.forEach(item => {
+                const isGold = (item.metal || 'gold') === 'gold';
+                const price = isGold ? currentGramPricePLN : silverGramPricePLN;
+                
+                let itemMarketVal = item.weight * price;
+                let itemDealerVal = itemMarketVal;
+                
+                if (item.dealerPrice && item.dealerSpotPrice) {
+                    itemDealerVal = item.dealerPrice * (price / item.dealerSpotPrice);
+                } else if (item.spread !== undefined && item.spread !== null) {
+                    itemDealerVal = itemMarketVal * (1 - (item.spread / 100));
+                }
+                
+                totalSpent += item.buyPriceTotal;
+                totalValMarket += itemMarketVal;
+                totalValDealer += itemDealerVal;
+                
+                if (isGold) {
+                    goldWeight += item.weight;
+                    goldSpent += item.buyPriceTotal;
+                    goldValMarket += itemMarketVal;
+                    goldValDealer += itemDealerVal;
+                } else {
+                    silverWeight += item.weight;
+                    silverSpent += item.buyPriceTotal;
+                    silverValMarket += itemMarketVal;
+                    silverValDealer += itemDealerVal;
+                }
+            });
+
+            // Obliczenie i aktualizacja dziennego wyniku (złoto)
+            const dailyProfitGold = goldWeight * (window.goldDailyDiffPerGram || 0);
+            const dailyProfitEl = document.getElementById('dailyGoldProfit');
+            if (dailyProfitEl) {
+                dailyProfitEl.innerText = `${Math.abs(dailyProfitGold).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN`;
+                dailyProfitEl.className = `text-sm md:text-base font-extrabold transition-colors duration-300 ${dailyProfitGold >= 0 ? 'text-[#0ecb81]' : 'text-[#f6465d]'}`;
+            }
+
+            updateStats(totalSpent, totalValMarket, totalValDealer, goldWeight, silverWeight, goldSpent, goldValMarket, goldValDealer, silverSpent, silverValMarket, silverValDealer);
+        }
+
+        function updateStats(spent, valMarket, valDealer, goldW, silverW, goldSpent, goldValMarket, goldValDealer, silverSpent, silverValMarket, silverValDealer) {
+            totalSpentElement.innerText = `${spent.toLocaleString('pl-PL')} PLN`;
+            totalValueElement.innerText = `${Math.round(valMarket).toLocaleString('pl-PL')} PLN`;
+            
+            const goldProfitMarket = goldValMarket - goldSpent;
+            const silverProfitMarket = silverValMarket - silverSpent;
+            
+            const goldProfitDealer = goldValDealer - goldSpent;
+            const silverProfitDealer = silverValDealer - silverSpent;
+            
+            const formatProfit = (p) => `${Math.abs(Math.round(p)).toLocaleString('pl-PL')} PLN`;
+            const getColor = (p) => p >= 0 ? 'text-[#0ecb81]' : 'text-[#f6465d]';
+
+            totalProfitGoldElement.innerText = formatProfit(goldProfitMarket);
+            totalProfitGoldElement.className = `text-sm sm:text-base md:text-lg lg:text-xl font-black leading-none tracking-tight ${getColor(goldProfitMarket)}`;
+            
+            const goldDealerEl = document.getElementById('totalProfitGoldDealer');
+            if (goldDealerEl) {
+                goldDealerEl.innerText = `(${formatProfit(goldProfitDealer)})`;
+                goldDealerEl.className = `text-[10px] md:text-xs font-bold opacity-80 ${getColor(goldProfitDealer)}`;
+            }
+            
+            totalProfitSilverElement.innerText = formatProfit(silverProfitMarket);
+            totalProfitSilverElement.className = `text-sm sm:text-base md:text-lg lg:text-xl font-black leading-none tracking-tight ${getColor(silverProfitMarket)}`;
+            
+            if (currentWeightUnit === 'oz') {
+                goldAmountDisplay.innerText = `${(goldW / OZ_TO_GRAMS).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} oz Au`;
+                silverAmountDisplay.innerText = `${(silverW / OZ_TO_GRAMS).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} oz Ag`;
+            } else {
+                goldAmountDisplay.innerText = `${goldW.toLocaleString('pl-PL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} g Au`;
+                silverAmountDisplay.innerText = `${silverW.toLocaleString('pl-PL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} g Ag`;
+            }
+        }
+
+        setInterval(() => {
+            if (--countdown <= 0) { 
+                countdown = 5; 
+                fetchBinanceData(); 
+            }
+            countdownElement.innerText = `${countdown}s`;
+        }, 1000);
+
+        // --- PWA Setup ---
+        const manifest = {
+            "name": "Portfel Inwestycyjny",
+            "short_name": "Portfel",
+            "start_url": ".",
+            "display": "standalone",
+            "background_color": "#0b0e11",
+            "theme_color": "#f3ba2f",
+            "icons": [{
+                "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2YzYmEyZiI+PHBhdGggZD0iTTEyIDJMMiAxMmgydjhoMTB2LThoMkwxMiAyeiIvPjwvc3ZnPg==",
+                "sizes": "192x192",
+                "type": "image/svg+xml"
+            }]
+        };
+        const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+        document.getElementById('manifest-link').href = URL.createObjectURL(manifestBlob);
+
+        const swCode = `
+            const CACHE_NAME = 'portfel-v1';
+            self.addEventListener('install', (e) => {
+                e.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll([location.href])));
+            });
+            self.addEventListener('fetch', (e) => {
+                e.respondWith(caches.match(e.request).then((res) => res || fetch(e.request)));
+            });
+        `;
+        const swBlob = new Blob([swCode], {type: 'application/javascript'});
+        const swUrl = URL.createObjectURL(swBlob);
+        
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register(swUrl).then(registration => {
+                    console.log('ServiceWorker registered with scope:', registration.scope);
+                }).catch(error => {
+                    console.log('ServiceWorker registration failed:', error);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
